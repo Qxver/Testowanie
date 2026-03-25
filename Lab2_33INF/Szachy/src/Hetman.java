@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Hetman {
-    public List<String> atakowanePolaHetmana(String pole, int n) {
+    public List<String> calculateAttack(String pole, int n, List<String> przeszkody) {
         List<String> wynik = new ArrayList<>();
         char kolumnaStartowa = pole.charAt(0);
         int wierszStartowy = Integer.parseInt(pole.substring(1));
@@ -24,10 +24,15 @@ public class Hetman {
             while (aktualnaKolumna >= 'A' && aktualnaKolumna <= maxLitera &&
                     aktualnyWiersz >= 1 && aktualnyWiersz <= n) {
 
-                wynik.add(aktualnaKolumna + "" + aktualnyWiersz);
+                String aktualnePole = aktualnaKolumna + "" + aktualnyWiersz;
+                wynik.add(aktualnePole);
+
+                if (przeszkody != null && przeszkody.contains(aktualnePole)) {
+                    break;
+                }
 
                 aktualnyWiersz += d_wiersz;
-                aktualnaKolumna += d_kolumna;
+                aktualnaKolumna += (char) d_kolumna;
             }
         }
         return wynik;
