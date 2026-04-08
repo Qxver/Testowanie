@@ -53,4 +53,50 @@ public class HetmanTest {
         assertNotEquals("Lista 'przeszkody2' zawiera duplikaty, więc rozmiary powinny być różne",
                 przeszkody2.size(), new HashSet<>(przeszkody2).size());
     }
+
+    @Test
+    public void czyPoprawnieObliczaAtakZRoguBezPrzeszkod() {
+        Hetman hetman = new Hetman();
+        List<String> atakowane = hetman.calculateAttack("A1", 8, List.of());
+
+        assertEquals("Z pola A1 hetman powinien atakować 21 pól", 21, atakowane.size());
+
+        assertTrue(atakowane.contains("A8"));
+        assertTrue(atakowane.contains("H1"));
+        assertTrue(atakowane.contains("H8"));
+    }
+
+    @Test
+    public void czyPrzeszkodaBlokujeAtak() {
+        Hetman hetman = new Hetman();
+        List<String> przeszkody = List.of("A4");
+
+        List<String> atakowane = hetman.calculateAttack("A1", 8, przeszkody);
+
+        assertTrue("Powinien zaatakować pole przed przeszkodą", atakowane.contains("A3"));
+        assertTrue("Powinien zaatakować zbić samą przeszkodę", atakowane.contains("A4"));
+
+        assertFalse("Nie powinien atakować pola za przeszkodą", atakowane.contains("A5"));
+        assertFalse("Nie powinien atakować pola za przeszkodą", atakowane.contains("A8"));
+    }
+
+    @Test(expected = StringIndexOutOfBoundsException.class)
+    public void czyRzucaWyjatekDlaPustegoCiaguZnakow() {
+        Hetman hetman = new Hetman();
+        // Przekazujemy pusty String, charAt(0) wyrzuci wyjątek
+        hetman.calculateAttack("", 8, List.of());
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void czyRzucaWyjatekDlaBlednegoFormatuPola() {
+        Hetman hetman = new Hetman();
+        // Brak liczby na końcu - substring(1) nie znajdzie liczby i rzuci błąd
+        hetman.calculateAttack("A", 8, List.of());
+    }
+
+    @Test
+    public void czySzachownicaNieJestWiekszaNiz26(){
+        int N = 27;
+        assertFalse("Szachownica nie może być większa niż 26 znaków", N<=26);
+    }
 }

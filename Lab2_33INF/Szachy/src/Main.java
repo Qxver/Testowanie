@@ -2,7 +2,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        int N = 8;
+        int N = 20;
         Szachownica szachownica = new Szachownica(N);
         Hetman hetman = new Hetman();
 
