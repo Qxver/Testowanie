@@ -1,5 +1,5 @@
-import static org.junit.Assert.*;
 import org.junit.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,11 +14,13 @@ public class HetmanTest {
         String poprawnePole = "E5";
         String niepoprawnePole = "Z9";
 
-        assertTrue("Pole " + poprawnePole + " powinno znajdować się na szachownicy",
-                szachownica.pola.contains(poprawnePole));
+        assertThat(szachownica.pola)
+                .as("Pole %s powinno znajdować się na szachownicy", poprawnePole)
+                .contains(poprawnePole);
 
-        assertFalse("Pole " + niepoprawnePole + " nie powinno znajdować się na szachownicy",
-                szachownica.pola.contains(niepoprawnePole));
+        assertThat(szachownica.pola)
+                .as("Pole %s nie powinno znajdować się na szachownicy", niepoprawnePole)
+                .doesNotContain(niepoprawnePole);
     }
 
     @Test
@@ -30,13 +32,15 @@ public class HetmanTest {
         List<String> niepoprawnePrzeszkody = List.of("E10", "A90", "A10");
 
         for (String przeszkoda : poprawnePrzeszkody) {
-            assertTrue("Pole " + przeszkoda + " powinno znajdować się na szachownicy",
-                    szachownica.pola.contains(przeszkoda));
+            assertThat(szachownica.pola)
+                    .as("Pole %s powinno znajdować się na szachownicy", przeszkoda)
+                    .contains(przeszkoda);
         }
 
         for (String przeszkoda : niepoprawnePrzeszkody) {
-            assertFalse("Pole " + przeszkoda + " nie powinno znajdować się na szachownicy",
-                    szachownica.pola.contains(przeszkoda));
+            assertThat(szachownica.pola)
+                    .as("Pole %s nie powinno znajdować się na szachownicy", przeszkoda)
+                    .doesNotContain(przeszkoda);
         }
     }
 
@@ -47,11 +51,13 @@ public class HetmanTest {
         List<String> przeszkody = List.of("E3", "B5", "H8");
         List<String> przeszkody2 = List.of("E3", "E3", "B5", "H8");
 
-        assertFalse("Lista przeszkód nie powinna zawierać pola, na którym stoi aktualnie hetman (" + poleHetmana + ")",
-                przeszkody.contains(poleHetmana));
+        assertThat(przeszkody)
+                .as("Lista przeszkód nie powinna zawierać pola, na którym stoi aktualnie hetman")
+                .doesNotContain(poleHetmana);
 
-        assertNotEquals("Lista 'przeszkody2' zawiera duplikaty, więc rozmiary powinny być różne",
-                przeszkody2.size(), new HashSet<>(przeszkody2).size());
+        assertThat(przeszkody2.size())
+                .as("Lista 'przeszkody2' zawiera duplikaty, więc rozmiary powinny być różne")
+                .isNotEqualTo(new HashSet<>(przeszkody2).size());
     }
 
     @Test
@@ -59,11 +65,10 @@ public class HetmanTest {
         Hetman hetman = new Hetman();
         List<String> atakowane = hetman.calculateAttack("A1", 8, List.of());
 
-        assertEquals("Z pola A1 hetman powinien atakować 21 pól", 21, atakowane.size());
-
-        assertTrue(atakowane.contains("A8"));
-        assertTrue(atakowane.contains("H1"));
-        assertTrue(atakowane.contains("H8"));
+        assertThat(atakowane)
+                .as("Z pola A1 hetman powinien atakować 21 pól")
+                .hasSize(21)
+                .contains("A8", "H1", "H8");
     }
 
     @Test
@@ -73,11 +78,11 @@ public class HetmanTest {
 
         List<String> atakowane = hetman.calculateAttack("A1", 8, przeszkody);
 
-        assertTrue("Powinien zaatakować pole przed przeszkodą", atakowane.contains("A3"));
-        assertTrue("Powinien zaatakować zbić samą przeszkodę", atakowane.contains("A4"));
-
-        assertFalse("Nie powinien atakować pola za przeszkodą", atakowane.contains("A5"));
-        assertFalse("Nie powinien atakować pola za przeszkodą", atakowane.contains("A8"));
+        assertThat(atakowane)
+                .as("Powinien zaatakować pole przed przeszkodą i zbić samą przeszkodę")
+                .contains("A3", "A4")
+                .as("Nie powinien atakować pól za przeszkodą")
+                .doesNotContain("A5", "A8");
     }
 
     @Test(expected = StringIndexOutOfBoundsException.class)
@@ -95,7 +100,9 @@ public class HetmanTest {
     @Test
     public void czySzachownicaNieJestWiekszaNiz26(){
         int N = 27;
-        assertFalse("Szachownica nie może być większa niż 26 znaków", N<=26);
+        assertThat(N)
+                .as("Szachownica nie może być większa niż 26 znaków")
+                .isGreaterThan(26);
     }
 
     @Test
@@ -103,8 +110,9 @@ public class HetmanTest {
         Hetman hetman = new Hetman();
         List<String> atakowane = hetman.calculateAttack("A1", 8, null);
 
-        assertEquals("Hetman powinien poprawnie obliczyć atak (21 pól), gdy lista przeszkód to null",
-                21, atakowane.size());
+        assertThat(atakowane)
+                .as("Hetman powinien poprawnie obliczyć atak (21 pól), gdy lista przeszkód to null")
+                .hasSize(21);
     }
 
     @Test
@@ -114,8 +122,9 @@ public class HetmanTest {
 
         List<String> atakowane = hetman.calculateAttack("A1", 8, przeszkody);
 
-        assertEquals("Przeszkody nie leżące na drodze ataku nie powinny wpływać na liczbę pól",
-                21, atakowane.size());
+        assertThat(atakowane)
+                .as("Przeszkody nie leżące na drodze ataku nie powinny wpływać na liczbę pól")
+                .hasSize(21);
     }
 
     @Test
@@ -123,8 +132,9 @@ public class HetmanTest {
         Hetman hetman = new Hetman();
         List<String> atakowane = hetman.calculateAttack("D4", 8, List.of());
 
-        assertEquals("Z pola D4 hetman powinien atakować 31 pól na szachownicy 8x8",
-                31, atakowane.size());
+        assertThat(atakowane)
+                .as("Z pola D4 hetman powinien atakować 31 pól na szachownicy 8x8")
+                .hasSize(31);
     }
 
     @Test
@@ -134,10 +144,11 @@ public class HetmanTest {
 
         List<String> atakowane = hetman.calculateAttack("C3", 8, przeszkody);
 
-        assertEquals("Hetman powinien uderzyć w dokładnie 8 przeszkód wokół niego i koniec ataku",
-                8, atakowane.size());
-        assertFalse("Hetman nie powinien widzieć poza bezpośrednie otoczenie",
-                atakowane.contains("E5"));
+        assertThat(atakowane)
+                .as("Hetman powinien uderzyć w dokładnie 8 przeszkód wokół niego i koniec ataku")
+                .hasSize(8)
+                .as("Hetman nie powinien widzieć poza bezpośrednie otoczenie")
+                .doesNotContain("E5");
     }
 
     @Test
@@ -150,8 +161,14 @@ public class HetmanTest {
             char kolumna = zbadanePole.charAt(0);
             int wiersz = Integer.parseInt(zbadanePole.substring(1));
 
-            assertTrue("Kolumna poza zakresem: " + zbadanePole, kolumna >= 'A' && kolumna <= 'H');
-            assertTrue("Wiersz poza zakresem: " + zbadanePole, wiersz >= 1 && wiersz <= n);
+            assertThat(kolumna)
+                    .as("Kolumna poza zakresem: %s", zbadanePole)
+                    .isGreaterThanOrEqualTo('A')
+                    .isLessThanOrEqualTo('H');
+
+            assertThat(wiersz)
+                    .as("Wiersz poza zakresem: %s", zbadanePole)
+                    .isBetween(1, n);
         }
     }
 
@@ -161,8 +178,9 @@ public class HetmanTest {
         String start = "E5";
         List<String> atakowane = hetman.calculateAttack(start, 8, List.of());
 
-        assertFalse("Hetman nie powinien atakować pola, na którym sam stoi nawet po rykoszecie",
-                atakowane.contains(start));
+        assertThat(atakowane)
+                .as("Hetman nie powinien atakować pola, na którym sam stoi nawet po rykoszecie")
+                .doesNotContain(start);
     }
 
     @Test
@@ -171,23 +189,25 @@ public class HetmanTest {
         int n = 4;
 
         List<String> atakowaneZeSrodka = hetman.calculateAttack("B2", n, List.of());
-        assertFalse("Lista zaatakowanych pól dla mniejszej szachownicy nie powinna być pusta",
-                atakowaneZeSrodka.isEmpty());
+        assertThat(atakowaneZeSrodka)
+                .as("Lista zaatakowanych pól dla mniejszej szachownicy nie powinna być pusta")
+                .isNotEmpty();
 
         List<String> atakowaneZRogu = hetman.calculateAttack("A1", n, List.of());
-        assertTrue("Z A1 na 4x4 atakuje co najmniej pola na wprost i po skosie",
-                atakowaneZRogu.size() >= 3);
+        assertThat(atakowaneZRogu)
+                .as("Z A1 na 4x4 atakuje co najmniej pola na wprost i po skosie")
+                .hasSizeGreaterThanOrEqualTo(3);
     }
 
-        @Test
-        public void czyOdbiciaNieWpadajaWNieskonczonaPetleNaDuzejPlanszy() {
-            Hetman hetman = new Hetman();
-            int n = 20;
+    @Test
+    public void czyOdbiciaNieWpadajaWNieskonczonaPetleNaDuzejPlanszy() {
+        Hetman hetman = new Hetman();
+        int n = 20;
 
-            // Brak asercji liczbowej - sprawdzamy jedynie, czy funkcja
-            // nie zawiesi się (Timeout) na dużej liczbie rykoszetów
-            List<String> atakowane = hetman.calculateAttack("A1", n, List.of());
+        List<String> atakowane = hetman.calculateAttack("A1", n, List.of());
 
-            assertFalse("Lista nie powinna być pusta na dużej planszy", atakowane.isEmpty());
-        }
+        assertThat(atakowane)
+                .as("Lista nie powinna być pusta na dużej planszy")
+                .isNotEmpty();
+    }
 }
