@@ -83,14 +83,12 @@ public class HetmanTest {
     @Test(expected = StringIndexOutOfBoundsException.class)
     public void czyRzucaWyjatekDlaPustegoCiaguZnakow() {
         Hetman hetman = new Hetman();
-        // Przekazujemy pusty String, charAt(0) wyrzuci wyjątek
         hetman.calculateAttack("", 8, List.of());
     }
 
     @Test(expected = NumberFormatException.class)
     public void czyRzucaWyjatekDlaBlednegoFormatuPola() {
         Hetman hetman = new Hetman();
-        // Brak liczby na końcu - substring(1) nie znajdzie liczby i rzuci błąd
         hetman.calculateAttack("A", 8, List.of());
     }
 
@@ -99,4 +97,97 @@ public class HetmanTest {
         int N = 27;
         assertFalse("Szachownica nie może być większa niż 26 znaków", N<=26);
     }
+
+    @Test
+    public void czyObslugujeNullJakoPrzszkodyBezWyjatku() {
+        Hetman hetman = new Hetman();
+        List<String> atakowane = hetman.calculateAttack("A1", 8, null);
+
+        assertEquals("Hetman powinien poprawnie obliczyć atak (21 pól), gdy lista przeszkód to null",
+                21, atakowane.size());
+    }
+
+    @Test
+    public void czyIgnorujePrzeszkodyTypuObokLiniiAtaku() {
+        Hetman hetman = new Hetman();
+        List<String> przeszkody = List.of("B3", "C2", "G8");
+
+        List<String> atakowane = hetman.calculateAttack("A1", 8, przeszkody);
+
+        assertEquals("Przeszkody nie leżące na drodze ataku nie powinny wpływać na liczbę pól",
+                21, atakowane.size());
+    }
+
+    @Test
+    public void czyPoprawnieObliczaAtakZeSrodkaSzachownicy() {
+        Hetman hetman = new Hetman();
+        List<String> atakowane = hetman.calculateAttack("D4", 8, List.of());
+
+        assertEquals("Z pola D4 hetman powinien atakować 31 pól na szachownicy 8x8",
+                31, atakowane.size());
+    }
+
+    @Test
+    public void czyPrzeszkodyNaSasiednichPolachKrotkoBlokujaAtak() {
+        Hetman hetman = new Hetman();
+        List<String> przeszkody = List.of("B2", "B3", "B4", "C2", "C4", "D2", "D3", "D4");
+
+        List<String> atakowane = hetman.calculateAttack("C3", 8, przeszkody);
+
+        assertEquals("Hetman powinien uderzyć w dokładnie 8 przeszkód wokół niego i koniec ataku",
+                8, atakowane.size());
+        assertFalse("Hetman nie powinien widzieć poza bezpośrednie otoczenie",
+                atakowane.contains("E5"));
+    }
+
+    @Test
+    public void czyZadneAtakowanePoleNieWychodziPozaSzachownice() {
+        Hetman hetman = new Hetman();
+        int n = 8;
+        List<String> atakowane = hetman.calculateAttack("D4", n, List.of());
+
+        for (String zbadanePole : atakowane) {
+            char kolumna = zbadanePole.charAt(0);
+            int wiersz = Integer.parseInt(zbadanePole.substring(1));
+
+            assertTrue("Kolumna poza zakresem: " + zbadanePole, kolumna >= 'A' && kolumna <= 'H');
+            assertTrue("Wiersz poza zakresem: " + zbadanePole, wiersz >= 1 && wiersz <= n);
+        }
+    }
+
+    @Test
+    public void czyPoleStartoweNieJestSamoZaatakowanePoOdbiciu() {
+        Hetman hetman = new Hetman();
+        String start = "E5";
+        List<String> atakowane = hetman.calculateAttack(start, 8, List.of());
+
+        assertFalse("Hetman nie powinien atakować pola, na którym sam stoi nawet po rykoszecie",
+                atakowane.contains(start));
+    }
+
+    @Test
+    public void czyPoprawnieObliczaDlaSzachownicyInnegoRozmiaru() {
+        Hetman hetman = new Hetman();
+        int n = 4;
+
+        List<String> atakowaneZeSrodka = hetman.calculateAttack("B2", n, List.of());
+        assertFalse("Lista zaatakowanych pól dla mniejszej szachownicy nie powinna być pusta",
+                atakowaneZeSrodka.isEmpty());
+
+        List<String> atakowaneZRogu = hetman.calculateAttack("A1", n, List.of());
+        assertTrue("Z A1 na 4x4 atakuje co najmniej pola na wprost i po skosie",
+                atakowaneZRogu.size() >= 3);
+    }
+
+        @Test
+        public void czyOdbiciaNieWpadajaWNieskonczonaPetleNaDuzejPlanszy() {
+            Hetman hetman = new Hetman();
+            int n = 20;
+
+            // Brak asercji liczbowej - sprawdzamy jedynie, czy funkcja
+            // nie zawiesi się (Timeout) na dużej liczbie rykoszetów
+            List<String> atakowane = hetman.calculateAttack("A1", n, List.of());
+
+            assertFalse("Lista nie powinna być pusta na dużej planszy", atakowane.isEmpty());
+        }
 }
