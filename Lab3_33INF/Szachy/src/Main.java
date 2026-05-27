@@ -5,15 +5,13 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
 
-        // Używamy interfejsu i wstrzykujemy naszego ręcznego dublera
         IAttackService attackService = new Hetman();
         Scanner scanner = new Scanner(System.in);
-        Szachownica szachownica = new Szachownica(8); // Domyślny rozmiar 8x8
+        Szachownica szachownica = new Szachownica(8);
 
         boolean programDziala = true;
 
         while (programDziala) {
-            // 1. Obliczenia i rysowanie (tylko jeśli hetman jest ustawiony)
             List<String> atakowane = null;
             if (szachownica.hetmanPos != null) {
                 atakowane = attackService.calculateAttack(szachownica.hetmanPos, szachownica.N, szachownica.przeszkody);
@@ -23,9 +21,7 @@ public class Main {
                 System.out.println("Hetman: " + szachownica.hetmanPos + " | Przeszkody: " + szachownica.przeszkody);
                 System.out.println("Atakowane pola: " + liczbaPola);
                 rysujSzachownice(szachownica.N, szachownica.hetmanPos, szachownica.przeszkody, atakowane);
-            } else {
-                System.out.println("\n[!] Hetman nie jest jeszcze ustawiony.");
-            }
+                }
 
             // 2. Menu nawigacyjne
             System.out.println("WYBIERZ AKCJĘ:");
@@ -38,13 +34,13 @@ public class Main {
             System.out.println("X - Zakończ program");
             System.out.print("Twój wybór: ");
 
-            String wybor = scanner.nextLine().toUpperCase();
+            String wybor = scanner.nextLine();
 
             switch (wybor) {
                 case "H":
                     while (true) {
                         System.out.print("Podaj nowe pole dla hetmana: ");
-                        String nowyHetman = scanner.nextLine().toUpperCase();
+                        String nowyHetman = scanner.nextLine();
                         try {
                             szachownica.ustawHetmana(nowyHetman);
                             break;
@@ -58,7 +54,7 @@ public class Main {
                     System.out.println("Podaj przeszkody (wpisz 'K' aby przestać dodawać):");
                     while (true) {
                         System.out.print("Pole przeszkody: ");
-                        String p = scanner.nextLine().toUpperCase();
+                        String p = scanner.nextLine();
                         if (p.equals("K")) break;
                         try {
                             if (szachownica.przeszkody.contains(p)) {
@@ -73,7 +69,6 @@ public class Main {
                     break;
 
                 case "M":
-                    // Główna pętla trybu przenoszenia - kręci się dopóki użytkownik nie wpisze 'K' przy wyborze przeszkody
                     while (true) {
                         if (szachownica.przeszkody.isEmpty()) {
                             System.out.println("INFO: Na szachownicy nie ma już żadnych przeszkód do przeniesienia.");
@@ -83,11 +78,10 @@ public class Main {
                         String starePole = "";
                         boolean wyjscieDoMenu = false;
 
-                        // Pętla: Wybór przeszkody do ruszenia
                         while (true) {
                             System.out.println("\nAktualne przeszkody: " + szachownica.przeszkody);
                             System.out.print("Wybierz przeszkodę, którą chcesz przenieść (wpisz 'K' aby wrócić do menu głównego): ");
-                            starePole = scanner.nextLine().toUpperCase();
+                            starePole = scanner.nextLine();
 
                             if (starePole.equals("K")) {
                                 wyjscieDoMenu = true;
@@ -95,7 +89,7 @@ public class Main {
                             }
 
                             if (szachownica.przeszkody.contains(starePole)) {
-                                break; // Wybrano poprawną przeszkodę, lecimy dalej
+                                break;
                             } else {
                                 System.out.println("BŁĄD: Na polu " + starePole + " nie ma przeszkody. Spróbuj ponownie.");
                             }
@@ -103,21 +97,19 @@ public class Main {
 
                         if (wyjscieDoMenu) {
                             System.out.println("Powrót do menu głównego.");
-                            break; // Przerywa pętlę trybu "M" i wraca do menu głównego
+                            break;
                         }
 
-                        // Pętla: Wybór nowego miejsca dla wybranej przeszkody
                         while (true) {
                             System.out.print("Podaj nowe pole dla przeszkody " + starePole + " (wpisz 'K' aby anulować ten ruch): ");
-                            String nowePole = scanner.nextLine().toUpperCase();
+                            String nowePole = scanner.nextLine();
 
                             if (nowePole.equals("K")) {
                                 System.out.println("Anulowano ruch dla przeszkody " + starePole + ".");
-                                break; // Wychodzi do wyboru innej przeszkody
+                                break;
                             }
 
                             try {
-                                // Walidacja nowego położenia
                                 if (!szachownica.pola.contains(nowePole)) {
                                     throw new IllegalArgumentException("Pole poza szachownicą!");
                                 }
@@ -128,18 +120,16 @@ public class Main {
                                     throw new IllegalStateException("Na nowym polu znajduje się już inna przeszkoda!");
                                 }
 
-                                // Logika przeniesienia
                                 szachownica.przeszkody.remove(starePole);
                                 szachownica.dodajPrzeszkode(nowePole);
                                 System.out.println("Pomyślnie przeniesiono przeszkodę z " + starePole + " na " + nowePole);
 
-                                // LIVE REFRESH: Natychmiastowe przeliczenie i narysowanie nowej sytuacji na planszy
                                 if (szachownica.hetmanPos != null) {
                                     List<String> aktualneAtaki = attackService.calculateAttack(szachownica.hetmanPos, szachownica.N, szachownica.przeszkody);
                                     System.out.println("\n--- PLANSZA PO PRZESUNIĘCIU ---");
                                     rysujSzachownice(szachownica.N, szachownica.hetmanPos, szachownica.przeszkody, aktualneAtaki);
                                 }
-                                break; // Udany ruch, pętla wraca do początku "M" i pyta o kolejną przeszkodę
+                                break;
                             } catch (Exception e) {
                                 System.out.println("BŁĄD: " + e.getMessage() + " Spróbuj ponownie.");
                             }
@@ -174,7 +164,7 @@ public class Main {
                 case "C":
                     szachownica.hetmanPos = null;
                     szachownica.przeszkody.clear();
-                    System.out.println("Szachownica wyczyszczona!");
+                    System.out.println("Szachownica wyczyszczona!\n");
                     break;
 
                 case "X":
@@ -183,7 +173,7 @@ public class Main {
                     break;
 
                 default:
-                    System.out.println("Nieznana opcja, spróbuj ponownie.");
+                    System.out.println("Nieznana opcja, spróbuj ponownie.\n");
             }
         }
         scanner.close();

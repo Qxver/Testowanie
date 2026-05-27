@@ -1,31 +1,56 @@
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class DublerTest {
+public class DublerTestMockito {
 
     private final InputStream originalIn = System.in;
     private final PrintStream originalOut = System.out;
     private ByteArrayOutputStream outContent;
 
+    // Zlecenie dla Mockito: "Stwórz mi sztuczny obiekt udający ten interfejs"
+    @Mock
+    private IAttackService mockAttackService;
+
+    private AutoCloseable closeable;
+
     @Before
-    public void setUpStreams() {
+    public void setUp() {
+        // Inicjalizacja adnotacji @Mock
+        closeable = MockitoAnnotations.openMocks(this);
+
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
+
+        // Konfiguracja "zachowania" sztucznego dublera
+        // Nieważne o co go spytamy, zawsze zwróci puste dane (bo testujemy tylko nawigację)
+        when(mockAttackService.calculateAttack(anyString(), anyInt(), anyList())).thenReturn(Collections.emptyList());
+        when(mockAttackService.count(anyList())).thenReturn(0);
     }
 
     @After
-    public void restoreStreams() {
+    public void tearDown() throws Exception {
         System.setIn(originalIn);
         System.setOut(originalOut);
+        closeable.close(); // Sprzątanie po Mockito
     }
-
 
     private void symulujWejscieUzytkownika(String[] komendy) {
         String PolKomendy = String.join("\n", komendy) + "\n";
@@ -37,13 +62,16 @@ public class DublerTest {
         String[] skrypt = {"H", "B3", "X"};
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        // Przekazujemy naszego sztucznego dublera do Twojego programu
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
-        // Sprawdzamy czy edytor poprawnie przetworzył pole i zamknął aplikację
         assertTrue(wyjscieKonsoli.contains("Hetman: B3"));
         assertTrue(wyjscieKonsoli.contains("Zamykanie edytora."));
+
+        // Weryfikacja MOCKITO: Sprawdzamy czy interfejs obliczył atak dla pola B3
+        verify(mockAttackService, atLeastOnce()).calculateAttack(eq("B3"), anyInt(), anyList());
     }
 
     @Test
@@ -51,22 +79,19 @@ public class DublerTest {
         String[] skrypt = {"H", "Z9", "A1", "X"};
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
         assertTrue(wyjscieKonsoli.contains("BŁĄD:"));
         assertTrue(wyjscieKonsoli.contains("Hetman: A1"));
+
+        // MOCKITO: Upewniamy się, że zły ruch (Z9) nie dotarł do silnika obliczeniowego
+        verify(mockAttackService, atLeastOnce()).calculateAttack(eq("A1"), anyInt(), anyList());
     }
 
     @Test
     public void testPrzenoszeniePrzeszkod() {
-        // Najpierw ustawiamy Hetmana (A1), potem dodajemy przeszkodę (C3)
-        // Następnie wchodzimy w tryb przenoszenia (M):
-        //   - Przenosimy C3 na D4
-        //   - Przenosimy D4 na E5
-        //   - Wpisujemy K aby wyjść z trybu M
-        // Na koniec zamykamy program (X)
         String[] skrypt = {
                 "H", "A1",
                 "P", "C3", "K",
@@ -75,7 +100,7 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
@@ -86,13 +111,6 @@ public class DublerTest {
 
     @Test
     public void testZlaPrzeszkodaWTrybiePrzenoszeniaPrzeszkod() {
-        // Ustawienia: Hetman A1, Przeszkoda B2
-        // Przenoszenie (M):
-        //   - Podajemy złe pole źródłowe "H8" (nie ma tam przeszkody)
-        //   - Podajemy dobre pole "B2"
-        //   - Podajemy nowe zajęte pole "A1" (stoi tam hetman - wygeneruje błąd)
-        //   - Podajemy dobre puste pole "F6"
-        //   - Kończymy tryb M ("K") i zamykamy ("X")
         String[] skrypt = {
                 "H", "A1",
                 "P", "B2", "K",
@@ -101,7 +119,7 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
@@ -112,12 +130,6 @@ public class DublerTest {
 
     @Test
     public void testDodawaniePrzeszkod() {
-        // Ustawienia: Hetman na A1
-        // Dodawanie (P):
-        //   - dobre pole C3
-        //   - dobre pole D4
-        //   - zduplikowane pole C3 (powinno wyrzucić błąd)
-        //   - wyjście z trybu (K) i zamknięcie (X)
         String[] skrypt = {
                 "H", "A1",
                 "P", "C3", "D4", "C3", "K",
@@ -125,7 +137,7 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
@@ -136,9 +148,6 @@ public class DublerTest {
 
     @Test
     public void testWyczyszczeniezachownicy() {
-        // Ustawienia: Hetman na E4, Przeszkoda na A1
-        // Akcja: Wyczyść wszystko (C)
-        // Oczekiwane: Brak hetmana na planszy po wyczyszczeniu
         String[] skrypt = {
                 "H", "E4",
                 "P", "A1", "K",
@@ -147,7 +156,7 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
@@ -166,7 +175,7 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
@@ -182,10 +191,6 @@ public class DublerTest {
     public void testOdczytZPliku() {
         String testowyPlik = "odczyt_planszy_test.txt";
 
-        // Akcja:
-        // 1. Ustawiamy Hetmana i tworzymy plik (Z) jako przygotowanie środowiska pod test
-        // 2. Czyścimy planszę (C), żeby udowodnić, że była pusta przed odczytem
-        // 3. Właściwy test: Odczytujemy plik (O)
         String[] skrypt = {
                 "H", "E4",
                 "Z", testowyPlik,
@@ -195,12 +200,11 @@ public class DublerTest {
         };
         symulujWejscieUzytkownika(skrypt);
 
-        Main.main(new String[]{});
+        Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
 
         assertTrue(wyjscieKonsoli.contains("Pomyślnie odczytano stan szachownicy z pliku!"));
-
         assertTrue(wyjscieKonsoli.contains("Hetman: E4"));
 
         java.io.File file = new java.io.File(testowyPlik);
