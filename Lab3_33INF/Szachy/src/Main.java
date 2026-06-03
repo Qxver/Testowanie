@@ -3,9 +3,12 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
 
-        IAttackService attackService = new Hetman();
+    public static void main(String[] args) {
+        uruchomEdytor(new Hetman());
+    }
+
+    public static void uruchomEdytor(IAttackService attackService) {
         Scanner scanner = new Scanner(System.in);
         Szachownica szachownica = new Szachownica(8);
 
@@ -21,9 +24,9 @@ public class Main {
                 System.out.println("Hetman: " + szachownica.hetmanPos + " | Przeszkody: " + szachownica.przeszkody);
                 System.out.println("Atakowane pola: " + liczbaPola);
                 rysujSzachownice(szachownica.N, szachownica.hetmanPos, szachownica.przeszkody, atakowane);
-                }
+            }
 
-            // 2. Menu nawigacyjne
+            // Menu nawigacyjne
             System.out.println("WYBIERZ AKCJĘ:");
             System.out.println("H - Ustaw/Zmień Hetmana");
             System.out.println("P - Dodaj Przeszkody");

@@ -25,7 +25,6 @@ public class DublerTestMockito {
     private final PrintStream originalOut = System.out;
     private ByteArrayOutputStream outContent;
 
-    // Zlecenie dla Mockito: "Stwórz mi sztuczny obiekt udający ten interfejs"
     @Mock
     private IAttackService mockAttackService;
 
@@ -33,14 +32,11 @@ public class DublerTestMockito {
 
     @Before
     public void setUp() {
-        // Inicjalizacja adnotacji @Mock
         closeable = MockitoAnnotations.openMocks(this);
 
         outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
 
-        // Konfiguracja "zachowania" sztucznego dublera
-        // Nieważne o co go spytamy, zawsze zwróci puste dane (bo testujemy tylko nawigację)
         when(mockAttackService.calculateAttack(anyString(), anyInt(), anyList())).thenReturn(Collections.emptyList());
         when(mockAttackService.count(anyList())).thenReturn(0);
     }
@@ -49,7 +45,9 @@ public class DublerTestMockito {
     public void tearDown() throws Exception {
         System.setIn(originalIn);
         System.setOut(originalOut);
-        closeable.close(); // Sprzątanie po Mockito
+        if (closeable != null) {
+            closeable.close();
+        }
     }
 
     private void symulujWejscieUzytkownika(String[] komendy) {
@@ -62,7 +60,6 @@ public class DublerTestMockito {
         String[] skrypt = {"H", "B3", "X"};
         symulujWejscieUzytkownika(skrypt);
 
-        // Przekazujemy naszego sztucznego dublera do Twojego programu
         Main.uruchomEdytor(mockAttackService);
 
         String wyjscieKonsoli = outContent.toString();
@@ -70,7 +67,6 @@ public class DublerTestMockito {
         assertTrue(wyjscieKonsoli.contains("Hetman: B3"));
         assertTrue(wyjscieKonsoli.contains("Zamykanie edytora."));
 
-        // Weryfikacja MOCKITO: Sprawdzamy czy interfejs obliczył atak dla pola B3
         verify(mockAttackService, atLeastOnce()).calculateAttack(eq("B3"), anyInt(), anyList());
     }
 
@@ -86,7 +82,6 @@ public class DublerTestMockito {
         assertTrue(wyjscieKonsoli.contains("BŁĄD:"));
         assertTrue(wyjscieKonsoli.contains("Hetman: A1"));
 
-        // MOCKITO: Upewniamy się, że zły ruch (Z9) nie dotarł do silnika obliczeniowego
         verify(mockAttackService, atLeastOnce()).calculateAttack(eq("A1"), anyInt(), anyList());
     }
 
